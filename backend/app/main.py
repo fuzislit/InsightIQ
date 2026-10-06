@@ -1,3 +1,6 @@
+#Run backend with the follwoing 
+#uvicorn app.main:app --reload --app-dir backend
+
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel

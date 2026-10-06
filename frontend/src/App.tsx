@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
@@ -72,10 +73,16 @@ function App() {
   };
 
   return (
-    <div>
-      <h1>InsightIQ</h1>
+    <div className="app">
+      <header className="header">
+        <h1>InsightIQ</h1>
+        <p>AI-powered data analytics from your CSV files.</p>
+      </header>
 
-      <p>Upload a CSV dataset to begin.</p>
+    <div className="card">
+      <h2>Upload Dataset</h2>
+
+      <p>Upload a CSV file to begin analyzing your data.</p>
 
       <input
         type="file"
@@ -84,62 +91,140 @@ function App() {
       />
 
       {file && <p>Selected file: {file.name}</p>}
+    </div>
 
       {error && <p>{error}</p>}
 
       {uploadResult && (
-        <div>
-          <h2>Dataset Information</h2>
+        <div className = "card">
+          <h2>Dataset Overview</h2>
 
-          <p>Rows: {uploadResult.rows}</p>
-          <p>Columns: {uploadResult.columns}</p>
+    <p>
+      <strong>File:</strong> {uploadResult.filename}
+    </p>
 
-          <h3>Column Names</h3>
+    <div className="stats">
+      <div className="stat-card">
+        <span className="stat-value">{uploadResult.rows}</span>
+        <span className="stat-label">Rows</span>
+      </div>
 
-          <ul>
-            {uploadResult.column_names.map((column: string) => (
-              <li key={column}>{column}</li>
+      <div className="stat-card">
+        <span className="stat-value">{uploadResult.columns}</span>
+        <span className="stat-label">Columns</span>
+      </div>
+    </div>
+
+    <h3>Columns</h3>
+
+    <ul>
+      {uploadResult.column_names.map((column: string) => (
+        <li key={column}>
+          <strong>{column}</strong> — {uploadResult.data_types[column]}
+        </li>
+      ))}
+    </ul>
+
+    <h3>Missing Values</h3>
+
+    <ul>
+      {uploadResult.column_names.map((column: string) => (
+        <li key={column}>
+          {column}: {uploadResult.missing_values[column]}
+        </li>
+      ))}
+    </ul>
+
+    <h3>Numeric Summary</h3>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Statistic</th>
+
+          {Object.keys(uploadResult.numeric_summary).map((column) => (
+            <th key={column}>{column}</th>
+          ))}
+        </tr>
+      </thead>
+
+      <tbody>
+        {["count", "mean", "min", "max"].map((statistic) => (
+          <tr key={statistic}>
+            <td>{statistic}</td>
+
+            {Object.keys(uploadResult.numeric_summary).map((column) => (
+              <td key={column}>
+                {uploadResult.numeric_summary[column][statistic]?.toFixed(2)}
+              </td>
             ))}
-          </ul>
-        </div>
-      )}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+  
 
       {uploadResult && (
-        <div>
-          <h2>Ask a Question</h2>
+          <div className="card">
+              <h2>Ask your Data</h2>
 
-          <input
-            type="text"
-            placeholder="What is the average price?"
-            value={question}
-            onChange={(event) => setQuestion(event.target.value)}
-          />
+              <div className="question-row">
+              <input
+                type="text"
+                placeholder="What is the average price?"
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+              />
 
-          <button onClick={handleAsk}>
-            Ask
-          </button>
+              <button onClick={handleAsk}>
+                Ask
+              </button>
+            </div>
         </div>
       )}
 
       {answer && (
-        <div>
-          <h2>Answer</h2>
+          <div className="card">
+          <h2>Analysis Result</h2>
 
           <p>
-            Question: {answer.question}
+            <strong>Question:</strong> {answer.question}
           </p>
 
           <p>
-            Operation: {answer.operation}
+            <strong>Operation:</strong> {answer.operation}
           </p>
 
           <p>
-            Column: {answer.column}
+            <strong>Column:</strong> {answer.column}
           </p>
 
           <p>
-            Result: {JSON.stringify(answer.result)}
+            <strong>Result:</strong> {JSON.stringify(answer.result)}
           </p>
+
+          {typeof answer.result === "object" && answer.result !== null && (
+            <BarChart
+              width={700}
+              height={350}
+              margin={{ top: 10, right: 20, left: 20, bottom: 40 }}
+              data={Object.entries(answer.result).map(([name, value]) => ({
+                name,
+                value,
+              }))}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="name"
+                interval={0}
+              />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="value" />
+            </BarChart>
+          )}
         </div>
       )}
     </div>
