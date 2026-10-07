@@ -1,13 +1,8 @@
 import { useState } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+
+import UploadCard from "./UploadCard";
+import DatasetOverview from "./DatasetOverview";
+import AnalysisResult from "./AnalysisResult";
 
 interface UploadResult {
   filename: string;
@@ -30,6 +25,8 @@ function App() {
   const [file, setFile] = useState<File | null>(null);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [error, setError] = useState("");
+
+  const [loading, setLoading] = useState(false);
 
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<Answer | null>(null);
@@ -74,6 +71,7 @@ function App() {
 
     setError("");
     setAnswer(null);
+    setLoading(true);
 
     try {
       const response = await fetch("http://127.0.0.1:8000/ask", {
@@ -94,6 +92,8 @@ function App() {
       setAnswer(data);
     } catch {
       setError("Could not process the question.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,105 +104,18 @@ function App() {
         <p>AI-powered data analytics from your CSV files.</p>
       </header>
 
-      <div className="card">
-        <h2>Upload Dataset</h2>
-
-        <p>Upload a CSV file to begin analyzing your data.</p>
-
-        <input
-          type="file"
-          accept=".csv"
-          onChange={handleFileChange}
-        />
-
-        {file && <p>Selected file: {file.name}</p>}
-      </div>
+      <UploadCard
+        file={file}
+        uploadResult={uploadResult !== null}
+        handleFileChange={handleFileChange}
+      />
 
       {error && <p>{error}</p>}
 
       {uploadResult && (
         <div className="dashboard-grid">
 
-          <div className="card dataset-card">
-            <h2>Dataset Overview</h2>
-
-            <p>
-              <strong>File:</strong> {uploadResult.filename}
-            </p>
-
-            <div className="stats">
-              <div className="stat-card">
-                <span className="stat-value">{uploadResult.rows}</span>
-                <span className="stat-label">Rows</span>
-              </div>
-
-              <div className="stat-card">
-                <span className="stat-value">{uploadResult.columns}</span>
-                <span className="stat-label">Columns</span>
-              </div>
-            </div>
-
-            <div className="dataset-details">
-
-              <div className="detail-section">
-                <h3>Columns</h3>
-
-                {uploadResult.column_names.map((column: string) => (
-                  <div className="detail-row" key={column}>
-                    <span className="detail-name">{column}</span>
-                    <span className="detail-value">
-                      {uploadResult.data_types[column]}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="detail-section">
-                <h3>Missing Values</h3>
-
-                {uploadResult.column_names.map((column: string) => (
-                  <div className="detail-row" key={column}>
-                    <span className="detail-name">{column}</span>
-                    <span className="detail-value">
-                      {uploadResult.missing_values[column]}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-            </div>
-
-            <h3>Numeric Summary</h3>
-
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Statistic</th>
-
-                    {Object.keys(uploadResult.numeric_summary).map((column) => (
-                      <th key={column}>{column}</th>
-                    ))}
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {["count", "mean", "min", "max"].map((statistic) => (
-                    <tr key={statistic}>
-                      <td>{statistic}</td>
-
-                      {Object.keys(uploadResult.numeric_summary).map((column) => (
-                        <td key={column}>
-                          {uploadResult.numeric_summary[column][statistic]?.toFixed(2)}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
+          <DatasetOverview uploadResult={uploadResult} />
 
           <div className="dashboard-side">
 
@@ -217,81 +130,16 @@ function App() {
                   onChange={(event) => setQuestion(event.target.value)}
                 />
 
-                <button onClick={handleAsk}>
-                  Ask
+                <button onClick={handleAsk} disabled={loading}>
+                  {loading ? "Analyzing..." : "Ask"}
                 </button>
               </div>
             </div>
 
             {answer && (
-              <div className="card">
-                <h2>Analysis Result</h2>
-
-                <p>{answer.question}</p>
-
-                <div className="result-details">
-                  <div className="result-item">
-                    <strong>Operation:</strong> {answer.operation}
-                  </div>
-
-                  <div className="result-item">
-                    <strong>Column:</strong> {answer.column}
-                  </div>
-
-                  <div className="result-item">
-                    <strong>Result:</strong> {JSON.stringify(answer.result)}
-                  </div>
-                </div>
-
-                {typeof answer.result === "object" && answer.result !== null && (
-                  <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={280}>
-                      <BarChart
-                        data={Object.entries(answer.result).map(([name, value]) => ({
-                          name,
-                          value,
-                        }))}
-                        margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
-                      >
-                        <CartesianGrid
-                          stroke="#2a2f3a"
-                          strokeDasharray="3 3"
-                          vertical={false}
-                        />
-
-                        <XAxis
-                          dataKey="name"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "#9ca3af", fontSize: 13 }}
-                        />
-
-                        <YAxis
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: "#9ca3af", fontSize: 13 }}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "#171a21",
-                            border: "1px solid #343a46",
-                            borderRadius: "8px",
-                            color: "#f3f4f6",
-                          }}
-                        />
-
-                        <Bar
-                          dataKey="value"
-                          fill="#3b82f6"
-                          radius={[6, 6, 0, 0]}
-                          maxBarSize={70}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </div>
+              <AnalysisResult answer={answer} />
             )}
+
           </div>
         </div>
       )}

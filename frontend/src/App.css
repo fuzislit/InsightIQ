@@ -387,3 +387,49 @@ tbody tr:last-child td {
     grid-template-columns: 1fr;
   }
 }
+.single-result {
+  padding: 20px 0;
+}
+
+.single-result p {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: #9ca3af;
+}
+
+.single-result strong {
+  font-size: 36px;
+  font-weight: 600;
+}
+.upload-button {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #3b82f6;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.upload-button:hover {
+  opacity: 0.9;
+}
+
+.file-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  font-size: 14px;
+  color: #d1d5db;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #1f2937;
+  color: #86efac;
+  font-size: 12px;
+  font-weight: 500;
+}
