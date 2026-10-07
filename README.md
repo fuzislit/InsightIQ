@@ -34,7 +34,7 @@ Pandas Data Processing
      ↓
 Natural-Language Question
      ↓
-OpenAI LLM
+OpenAI GPT-5 mini
      ↓
 Structured Analysis Operation
      ↓
